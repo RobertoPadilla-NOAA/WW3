@@ -238,20 +238,39 @@
 ! * time stride is given in seconds
 ! * it is possible to overwrite a global output date for a given grid
 !
+! ALLDATE%FIELD%OUTFFILE = '1': If provided, WW3 will produce one file per
+!                           output time step. Every file will have all 
+!                           output for the required fields.
+!                           The filenames will have a time tag.
+!
+! ALLDATE%POINT%OUTFFILE = '1': If provided, WW3 will produce one file per
+!                           output time step. Every file will have all 
+!                           output for the required points.
+!                           The filenames will have a time tag.
+!
+! ALLDATE%RESTART2:   With this option the user requires a second stream of
+!                  restart files (see ww3_shel.inp).
+!
+!
 ! * namelist must be terminated with /
 ! * definitions & defaults:
 !     ALLDATE%FIELD%START         =  '19680606 000000'
 !     ALLDATE%FIELD%STRIDE        =  '0'
 !     ALLDATE%FIELD%STOP          =  '19680607 000000'
+!     ALLDATE%FIELD%OUTFFILE      =  '1'
 !     ALLDATE%POINT%START         =  '19680606 000000'
 !     ALLDATE%POINT%STRIDE        =  '0'
 !     ALLDATE%POINT%STOP          =  '19680607 000000'
+!     ALLDATE%POINT%OUTFFILE      =  '1'
 !     ALLDATE%TRACK%START         =  '19680606 000000'
 !     ALLDATE%TRACK%STRIDE        =  '0'
 !     ALLDATE%TRACK%STOP          =  '19680607 000000'
 !     ALLDATE%RESTART%START       =  '19680606 000000'
 !     ALLDATE%RESTART%STRIDE      =  '0'
 !     ALLDATE%RESTART%STOP        =  '19680607 000000'
+!     ALLDATE%RESTART2%START      =  '19680606 000000'
+!     ALLDATE%RESTART2%STRIDE     =  '0'
+!     ALLDATE%RESTART2%STOP       =  '19680607 000000'
 !     ALLDATE%BOUNDARY%START      =  '19680606 000000'
 !     ALLDATE%BOUNDARY%STRIDE     =  '0'
 !     ALLDATE%BOUNDARY%STOP       =  '19680607 000000'

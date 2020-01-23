@@ -63,7 +63,22 @@ $          the total number and order of the logical flags is fixed.
 $                               The raw data file is out_grd.ww3, 
 $                               see w3iogo.ftn for additional doc.
 $
-   19680606 000000   3600  19680608 000000
+   19680606 000000   3600  19680607 000000
+$ OR
+$  19680606 000000   3600  19680607 000000 FLAGTYPE1
+$
+$ FLAGTYPE1 : This in an OPTIONAL parameter with a value 0 or 1.
+$            The default output for TYPE 1 writes all required 
+$            fields for all output time steps in ONE file.
+$
+$ FLAGTYPE1 not provided: The default output is activated.
+$ FLAGTYPE1=0 : The dafault output is activated.
+$ FLAGTYPE1=1 : WW3 will produce one file per output time step.
+$               Every file will have all required parameters.
+$               The filenames will have a time tag.
+$               EXAMPLE: 
+$   19680606 000000   3600  19680607 000000 1
+$
 $----------------------------------------------------------------
 $ Output request flags identifying fields.
 $ 
@@ -287,7 +302,22 @@ $          advised, because it will break the GrADS utility to
 $          plots spectra and source terms, and will make it more
 $          difficult to use point names in data files.
 $
-   19680606 000000    900  19680608 000000
+$   19680606 000000    900  19680608 000000 FLAGTYPE2
+$ FLAGTYPE2 : This in an OPTIONAL parameter with a value 0 or 1.
+$            The default output for TYPE 2 (NO FLAGTYPE2 is provided)
+$            writes all required point output in ONE file for
+$            all points for all output time steps.
+$
+$ FLAGTYPE2 not provided: The default output is activated.
+$ FLAGTYPE2=0 : The dafault output is activated. WW3 will produce one
+$               output file for all points for all output time steps.
+$ FLAGTYPE2=1 : WW3 will produce one file per output time step.
+$               Every file will have all required parameter for all
+$               points. The filenames will have a time tag.
+$               EXAMPLE: 
+$   19680606 000000   3600  19680607 000000 1
+$
+   19680606 000000    900  19680608 000000 
 $
     -0.25 -0.25 'Land      '
      0.0   0.0  'Point_1   '
@@ -298,6 +328,7 @@ $
 $
      0.0   0.0  'STOPSTRING'
 $
+$----------------------------------------------------------------
 $ Type 3 : Output along track.
 $          Flag for formatted input file.
 $                         The data files are track_i.ww3 and
@@ -306,11 +337,36 @@ $
    19680606 000000   1800  19680606 013000
      T
 $
+$----------------------------------------------------------------
+$
 $ Type 4 : Restart files (no additional data required).
 $                               The data file is restartN.ww3, see
 $                               w3iors.ftn for additional doc.
 $
    19680606 030000  3600  19680607 030000
+$  OR
+$  19680606 060000   3600  19680606 060000 FLAGTYPE4
+$  19680606 120000  21600  19680608 000000 
+$
+$ FLAGTYPE4: This is an OPTIONAL parameter with a unique value "T".
+$           The default output for TYPE 4 (FLAGTYPE4 is not provided)
+$           results in one stream of restart files, if more than one
+$           restart files are required the filenames of those files
+$           includes consecutive numbers "001, 002, 003 ..."
+$
+$ FLAGTYPE4 not provided: The default stream of restart file
+$           is activated.
+$ FLAGTYPE4=T : A second request of restart files will ne activated.
+$           In this case the user MUST provide a second line with 
+$           exactly the same information as in the first line,
+$           except that another FLAGTYPE4 is not allowed. 
+$           first time in yyyymmdd hhmmss format, output interval (s),
+$           and last time in yyyymmdd hhmmss format (all integers).
+$           Output is disabled by setting the output interval to 0.  
+$           EXAMPLE:
+$   19680606 060000   3600  19680606 060000 T
+$   19680606 120000  21600  19680608 000000 
+$----------------------------------------------------------------
 $
 $ Type 5 : Boundary data (no additional data required).
 $                               The data file is nestN.ww3, see
