@@ -441,6 +441,8 @@
       CHARACTER(LEN=80)       :: LINE
       CHARACTER(LEN=80)       :: LINEIN
       CHARACTER(LEN=8)        :: WORDS(6)
+      CHARACTER(LEN=20)       ::RSTNAME
+      INTEGER                 :: ISTAT,CHECKRST
 
       TYPE OT2TPE
         INTEGER                    :: NPTS
@@ -1121,6 +1123,7 @@
         CALL NEXTLN ( COMSTR , MDSI , MDSE2 )
 !
         IF(J .LE. 2) THEN
+          WORDS(1:6)=''
           READ (MDSI,'(A)') LINEIN
           READ(LINEIN,*,iostat=ierr) WORDS
 !        
@@ -1146,6 +1149,7 @@
           END IF
 ! CHECKPOINT
         ELSE IF(J .EQ. 4) THEN
+            WORDS(1:6)=''
             READ (MDSI,'(A)') LINEIN
             READ(LINEIN,*,iostat=ierr) WORDS
 !
@@ -1155,7 +1159,16 @@
             READ(WORDS( 4 ), * ) ODAT(19,1)
             READ(WORDS( 5 ), * ) ODAT(20,1)
             IF (WORDS(6) .EQ. 'T') THEN
-              READ (MDSI,*,END=2001,ERR=2002)(ODAT(I,1),I=5*(8-1)+1,5*8)
+              CALL NEXTLN ( COMSTR , MDSI , MDSE2 )
+              READ(MDSI,'(I8)', IOSTAT=ISTAT) CHECKRST
+              write(*,*) 'ISTAT,CHECKRST=', ISTAT,CHECKRST
+              IF (ISTAT==0) THEN
+                GOTO 2056
+              END IF
+              BACKSPACE (UNIT= MDSI)
+              READ (MDSI,*,END=2001,ERR=2002)RSTNAME,                  &
+               (ODAT(I,1),I=5*(8-1)+1,5*8)
+              WRITE(*,*)RSTNAME, (ODAT(I,1),I=5*(8-1)+1,5*8)
               END IF
         ELSE
           READ (MDSI,*,END=2001,ERR=2002)(ODAT(I,1),I=5*(J-1)+1,5*J)
@@ -1450,7 +1463,7 @@
         CALL NEXTLN ( COMSTR , MDSI , MDSE2 )
         IF(J .LE. 2) THEN
           OUTFF(J,I)=0
-          WORDS(6) =''
+          WORDS(1:6) =''
           READ (MDSI,'(A)') LINEIN
           READ(LINEIN,*,iostat=ierr) WORDS
           IF(J .EQ. 1) THEN
@@ -2902,6 +2915,11 @@
       CALL EXTCDE ( 2054 )
       RETURN
 !
+ 2056 CONTINUE
+      IF ( IMPROC .EQ. NMPERR ) WRITE (MDSE,1056)
+      CALL EXTCDE ( 2056 )
+      RETURN
+!
  2060 CONTINUE
       IF ( IMPROC .EQ. NMPERR ) WRITE (MDSE,1060)
       CALL EXTCDE ( 2060 )
@@ -3093,6 +3111,12 @@
                '     WHEN UNIFIED POINT OUTPUT IS REQUESTED'/)
  1054 FORMAT (/' *** WAVEWATCH III ERROR IN W3MLTI : ***'/            &
          '     POINT OUTPUT ACTIVATED, BUT NO POINTS DEFINED'/)
+ 1056 FORMAT (/' ********* WAVEWATCH III ERROR IN W3MLTI : *********'/&
+         ' * WHEN THE OPTIONAL PARAMETER IN THE RESTART      *'/  &
+         ' * OUTPUT TIMES IS DECLARED AS T, THEN THE SECOND  *'/  &
+         ' * LINE FOR THE RESTART MUST START WITH THE NAME   *'/  &
+         ' * OF THIS SECOND SET OF OUTPUT                    *'/  &
+         ' ***************************************************'/)
  1060 FORMAT (/' *** WAVEWATCH III ERROR IN W3MLTI : ***'/            &
                '     NO MOVING GRID DATA PRESENT'/)
  1070 FORMAT (/' *** WAVEWATCH III ERROR IN WMINIT : ***'/            &
