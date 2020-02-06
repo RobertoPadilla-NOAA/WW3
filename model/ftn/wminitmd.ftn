@@ -377,7 +377,7 @@
 !/MPI                          MPI_COMM_BCT, CROOT, FBCAST
 !/MPRF      USE WMMDATMD, ONLY: MDSP
       USE W3INITMD, ONLY: WWVER
-      USE W3ODATMD, ONLY:  OFILES
+      USE W3ODATMD, ONLY:  OFILES, WRSTWND
 ! 
 !/
       IMPLICIT NONE
@@ -420,7 +420,7 @@
       LOGICAL, ALLOCATABLE    :: FLGRD(:,:,:), FLRBPI(:), BCDTMP(:),   &
                                  USEINP(:), LPRT(:), FLGR2(:,:,:),     &
                                  FLGD(:,:), FLG2(:,:), FLG2D(:,:),     &
-                                 FLG1D(:), CPLINP(:)
+                                 FLG1D(:), CPLINP(:), WRSTW01(:)
       CHARACTER(LEN=1)        :: COMSTR
       CHARACTER(LEN=3)        :: IDSTR(7), IDTST
       CHARACTER(LEN=5)        :: STOUT, OUTSTR(6)
@@ -440,7 +440,7 @@
       CHARACTER(LEN=80)       :: TNAME
       CHARACTER(LEN=80)       :: LINE
       CHARACTER(LEN=80)       :: LINEIN
-      CHARACTER(LEN=8)        :: WORDS(6)
+      CHARACTER(LEN=8)        :: WORDS(7)
 
       TYPE OT2TPE
         INTEGER                    :: NPTS
@@ -654,7 +654,7 @@
            FLGRD(NOGRP,NGRPP,NRGRD), OT2(0:NRGRD), FLGD(NOGRP,NRGRD), &
            MDSF(-NRINP:NRGRD,JFIRST:7), IPRT(6,NRGRD), LPRT(NRGRD),   &
            FLGR2(NOGRP,NGRPP,NRGRD),FLG2D(NOGRP,NGRPP), FLG1D(NOGRP), &
-           FLG2(NOGRP,NRGRD),OUTFF(7,0:NRGRD))
+           FLG2(NOGRP,NRGRD),OUTFF(7,0:NRGRD),WRSTW01(NRGRD))
 !
       MDS    = -1
       MDSF   = -1
@@ -1121,6 +1121,7 @@
         CALL NEXTLN ( COMSTR , MDSI , MDSE2 )
 !
         IF(J .LE. 2) THEN
+          WORDS(1:7) =''
           READ (MDSI,'(A)') LINEIN
           READ(LINEIN,*,iostat=ierr) WORDS
 !        
@@ -1146,6 +1147,8 @@
           END IF
 ! CHECKPOINT
         ELSE IF(J .EQ. 4) THEN
+            WORDS(1:7) =''
+            WRSTW01(1)=.FALSE.
             READ (MDSI,'(A)') LINEIN
             READ(LINEIN,*,iostat=ierr) WORDS
 !
@@ -1154,13 +1157,36 @@
             READ(WORDS( 3 ), * ) ODAT(18,1)
             READ(WORDS( 4 ), * ) ODAT(19,1)
             READ(WORDS( 5 ), * ) ODAT(20,1)
+!XXX
+            WRITE(*,*) 'WORDS', WORDS(1:7)
+            WRITE(*,*) '1 WRSTW01(1)=', WRSTW01(1)
+!XXX
             IF (WORDS(6) .EQ. 'T') THEN
               READ (MDSI,*,END=2001,ERR=2002)(ODAT(I,1),I=5*(8-1)+1,5*8)
               END IF
+
+            IF (WORDS(6) .EQ. 'T' .OR. WORDS(6) .EQ. 'F' ) THEN
+              IF (WORDS(7) .EQ. '') THEN
+                  GOTO 2056
+              ELSE
+                IF (WORDS(7) .EQ. 'T') THEN
+                  WRSTW01(1)=.TRUE.
+                ELSE
+                  WRSTW01(1)=.FALSE.
+                ENDIF
+                OUTPTS(1)%WRSTWND = WRSTW01(1)
+              ENDIF
+            ENDIF
+            IF (WORDS(6) .EQ. 'F') WRITE (MDSE,1057)
+!XXX
+            WRITE(*,*) '2 WRSTW01(1)=', WRSTW01(1)
+!XXX
+
         ELSE
           READ (MDSI,*,END=2001,ERR=2002)(ODAT(I,1),I=5*(J-1)+1,5*J)
           OUTFF(J,1) = 0
         END IF
+!
 !
         OUTPTS(1)%OFILES(J)=OUTFF(J,1)
 !         
@@ -1386,7 +1412,15 @@
         FLGR2(:,:,I) = FLGR2(:,:,1)
         IPRT(:,I)  = IPRT(:,1)
         LPRT(I)    = LPRT(1)
+        OUTPTS(I)%WRSTWND= WRSTW01(1)
         END DO
+
+!XXX
+      DO I=1, NRGRD
+       WRITE(*,*)'WRSTWND(',I,')=', OUTPTS(I)%WRSTWND
+      END DO
+!XXX
+
 !
       IF ( NPTS.EQ.0 .OR. ODAT(8,0).EQ.0 ) UNIPTS = .FALSE.
       IF ( UNIPTS ) THEN
@@ -1450,7 +1484,7 @@
         CALL NEXTLN ( COMSTR , MDSI , MDSE2 )
         IF(J .LE. 2) THEN
           OUTFF(J,I)=0
-          WORDS(6) =''
+          WORDS(1:7) =''
           READ (MDSI,'(A)') LINEIN
           READ(LINEIN,*,iostat=ierr) WORDS
           IF(J .EQ. 1) THEN
@@ -2902,6 +2936,11 @@
       CALL EXTCDE ( 2054 )
       RETURN
 !
+ 2056 CONTINUE
+      IF ( IMPROC .EQ. NMPERR ) WRITE (MDSE,1056)
+      CALL EXTCDE ( 2056 )
+      RETURN
+!
  2060 CONTINUE
       IF ( IMPROC .EQ. NMPERR ) WRITE (MDSE,1060)
       CALL EXTCDE ( 2060 )
@@ -3093,6 +3132,24 @@
                '     WHEN UNIFIED POINT OUTPUT IS REQUESTED'/)
  1054 FORMAT (/' *** WAVEWATCH III ERROR IN W3MLTI : ***'/            &
          '     POINT OUTPUT ACTIVATED, BUT NO POINTS DEFINED'/)
+ 1056 FORMAT (/' *** WAVEWATCH III ERROR IN W3MLTI : ***'/            &
+         '     WHEN ONE OPTIONAL PARAMETER IN THE RESTART OUTPUT'/    &
+         '     TIMES IS DECLARED THEN BOTH OPTIONAL PARAMETERS  '/    &
+         '     MUST BE DECLARED '/                                    &
+         '     EXAMPLES: '/                                           &
+         '     19680606 000000  10800 19680706 000000 T T '/          &
+         '     19680606 000000  10800 19680706 000000 F T '/          &
+         '     19680606 000000  10800 19680706 000000 T F '/)
+
+ 1057 FORMAT (/'                                            '/        &
+               ' ***********************************************'/    &
+         '   ***   WAVEWATCH III WARNING IN W3MLTI :   ***'/          &
+         '     YOU HAVE CHOOSE THE OPTION F, NOT TO HAVE A '/       &
+         '     SECOND STRIDE FOR RESTART FILES.                  '/   &
+         '     BE SURE TO NOT PROVIDE A SECOND LINE'/                 &
+         '     FOR A RESTAR FILE   '/                                 &
+               ' *********************************************** '/   &
+         '       '/)
  1060 FORMAT (/' *** WAVEWATCH III ERROR IN W3MLTI : ***'/            &
                '     NO MOVING GRID DATA PRESENT'/)
  1070 FORMAT (/' *** WAVEWATCH III ERROR IN WMINIT : ***'/            &
