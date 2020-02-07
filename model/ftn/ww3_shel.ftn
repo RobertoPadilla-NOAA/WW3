@@ -296,7 +296,8 @@
                              TIME0(2), TIMEN(2), TTIME(2), TTT(2),     &
                              NH(-7:8), THO(2,-7:8,NHMAX), RCLD(5:7),   &
                              NODATA(5:7), ODAT(40), IPRT(6) = 0,       &
-                             STARTDATE(8), STOPDATE(8), IHH(-7:8)      
+                             STARTDATE(8), STOPDATE(8), IHH(-7:8)    
+      INTEGER             :: ISTAT,CHECKRST  
 !
 !/OASIS      INTEGER             :: OASISED
 !/COU      INTEGER             :: OFL
@@ -326,8 +327,9 @@
       CHARACTER(LEN=256)  :: TMPLINE, TEST
       CHARACTER(LEN=1024) :: FLDIN
       CHARACTER(LEN=80)   :: LINEIN
-      CHARACTER(LEN=8)    :: WORDS(6)=''
-
+      CHARACTER(LEN=8)    :: WORDS(6)
+      CHARACTER(LEN=20)   :: RSTNAME
+!
 !/COU      CHARACTER(LEN=30)       :: OFILE
 !
       LOGICAL             :: FLLSTL, FLLSTI, FLFLG, FLHOM, TFLAGI,     &
@@ -1200,7 +1202,9 @@
 !/DEBUGINIT        write(740+IAPROC,*), 'Before read 2002, case 7'
 !
 ! CHECKPOINT
+        write(*,*) 'J:', J
         IF(J .EQ. 4) THEN
+          LINEIN=''
           WORDS(1:6)=''
           ODAT(38)=0 
           READ (NDSI,'(A)') LINEIN
@@ -1210,9 +1214,22 @@
           READ(WORDS( 3 ), * ) ODAT(18)
           READ(WORDS( 4 ), * ) ODAT(19)
           READ(WORDS( 5 ), * ) ODAT(20)
+          write(*,*) 'WORDS: ',WORDS(1:6)
           IF (WORDS(6) .EQ. 'T') THEN
-            READ (NDSI,*,END=2001,ERR=2002)(ODAT(I),I=5*(8-1)+1,5*8)
-            WRITE(*,*)(ODAT(I),I=5*(8-1)+1,5*8)
+!!            READ (NDSI,*,END=2001,ERR=2002)(ODAT(I),I=5*(8-1)+1,5*8)
+!!            WRITE(*,*)(ODAT(I),I=5*(8-1)+1,5*8)
+
+              CALL NEXTLN ( COMSTR , NDSI , NDSEN )
+              READ(NDSI,'(I8)', IOSTAT=ISTAT) CHECKRST
+              write(*,*) 'ISTAT,CHECKRST=', ISTAT,CHECKRST
+              IF (ISTAT==0) THEN
+                GOTO 2056
+              END IF
+              BACKSPACE (UNIT= NDSI)
+              READ (NDSI,*,END=2001,ERR=2002)RSTNAME,                  &
+              (ODAT(I),I=5*(8-1)+1,5*8)
+              WRITE(*,*)RSTNAME, (ODAT(I),I=5*(8-1)+1,5*8)
+
           END IF
         ELSE
 !
@@ -1223,9 +1240,6 @@
           WORDS(1:6)=''
           READ (NDSI,'(A)') LINEIN
           READ(LINEIN,*,iostat=ierr) WORDS
-          DO I=1,6
-!            WRITE(*,*) I, WORDS(I)
-          END DO
 !
           IF(J .EQ. 1) THEN
             READ(WORDS( 1 ), * ) ODAT(1)
@@ -2405,6 +2419,11 @@
  2054 CONTINUE
       IF ( IAPROC .EQ. NAPERR ) WRITE (NDSE,1054)
       CALL EXTCDE ( 1054 )
+!
+ 2056 CONTINUE
+      IF ( IAPROC .EQ. NAPERR ) WRITE (NDSE,1056)
+      CALL EXTCDE ( 1056 )
+!
  2222 CONTINUE
 !
 !/MPI      CALL MPI_BARRIER ( MPI_COMM, IERR_MPI )
@@ -2543,6 +2562,12 @@
                '     FROM ',F4.1, ' TO ',F4.1/)
  1054 FORMAT (/' *** WAVEWATCH III ERROR IN W3SHEL : *** '/           &
                '     POINT OUTPUT ACTIVATED BUT NO POINTS DEFINED'/)
+ 1056 FORMAT (/' ********* WAVEWATCH III ERROR IN W3SHEL : *********'/&
+         ' * WHEN THE OPTIONAL PARAMETER IN THE RESTART      *'/  &
+         ' * OUTPUT TIMES IS DECLARED AS T, THEN THE SECOND  *'/  &
+         ' * LINE FOR THE RESTART MUST START WITH THE NAME   *'/  &
+         ' * OF THIS SECOND SET OF OUTPUT                    *'/  &
+         ' ***************************************************'/)
 !
 !
 !/T 9000 FORMAT ( ' TEST W3SHEL : UNIT NUMBERS  :',12I4)

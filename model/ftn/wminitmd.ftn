@@ -404,6 +404,7 @@
                                  NAPRES, NAPADD, NAPBCT, IFI, IFJ, IW,&
                                  IFT
       INTEGER                 :: STMPT(2), ETMPT(2)
+      INTEGER                 :: ISTAT,CHECKRST
 !/MPI      INTEGER                 :: IERR_MPI, BGROUP, LGROUP, IROOT
 !/S      INTEGER, SAVE           :: IENT = 0
       INTEGER, ALLOCATABLE    :: MDS(:,:), NTRACE(:,:), ODAT(:,:),    &
@@ -441,9 +442,8 @@
       CHARACTER(LEN=80)       :: LINE
       CHARACTER(LEN=80)       :: LINEIN
       CHARACTER(LEN=8)        :: WORDS(6)
-      CHARACTER(LEN=20)       ::RSTNAME
-      INTEGER                 :: ISTAT,CHECKRST
-
+      CHARACTER(LEN=20)       :: RSTNAME
+!
       TYPE OT2TPE
         INTEGER                    :: NPTS
         REAL, POINTER              :: X(:), Y(:)
@@ -1169,7 +1169,7 @@
               READ (MDSI,*,END=2001,ERR=2002)RSTNAME,                  &
                (ODAT(I,1),I=5*(8-1)+1,5*8)
               WRITE(*,*)RSTNAME, (ODAT(I,1),I=5*(8-1)+1,5*8)
-              END IF
+            END IF
         ELSE
           READ (MDSI,*,END=2001,ERR=2002)(ODAT(I,1),I=5*(J-1)+1,5*J)
           OUTFF(J,1) = 0
